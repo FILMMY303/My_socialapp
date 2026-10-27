@@ -1,0 +1,37 @@
+name: appsocial
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_dotenv: ^6.0.1
+  image_picker: ^1.2.4
+  path: ^1.9.1
+  path_provider: ^2.1.6
+  sembast: ^3.8.11
+  sembast_web: ^2.4.6
+  supabase_flutter: ^2.18.0
+  uuid: ^4.6.0
+  video_player: ^2.14.1
+  web: ^1.1.1
+
+# path_provider_foundation >=2.6 depends on objective_c, whose native build
+# hook fails when the project or Flutter SDK path contains a space
+# ("advance Programing"). 2.5.1 has the same API without that hook.
+dependency_overrides:
+  path_provider_foundation: 2.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
