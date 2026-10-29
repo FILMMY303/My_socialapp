@@ -1,6 +1,19 @@
-# appsocial
+# MySocial (appsocial)
 
-Flutter social app with Supabase authentication.
+A Flutter social network app (feed, reactions, comments, chat, groups and
+pages, notifications) backed by Supabase, with offline-first posting.
+
+## Download and links
+
+| | |
+|---|---|
+| Source code | https://github.com/FILMMY303/My_socialapp |
+| Android APK | [Releases](https://github.com/FILMMY303/My_socialapp/releases/latest): download `app-release.apk`, open it on the phone and allow "Install unknown apps" |
+| Web | `flutter run -d chrome`, or deploy `build/web` |
+| iOS / TestFlight | Not published. Building for iOS needs a Mac with Xcode and an Apple Developer account; see [iOS](#ios) |
+
+The APK talks to the Supabase project whose URL and publishable key were in
+`.env` at build time.
 
 ## Configure Supabase
 
@@ -25,6 +38,15 @@ is enforced by Supabase Auth and cannot be overridden by the Flutter client.
 When it is off, a successful registration creates a session and the app opens
 the signed-in experience automatically. The profile screen displays the
 signed-in user's email and username and includes sign out.
+
+## Supabase Auth settings
+
+- **Password reset (6-digit code):** in **Authentication > Email Templates >
+  Reset Password**, put the code in the email body, for example
+  `<p>Your code: <b>{{ .Token }}</b></p>`. Under **Providers > Email**, set
+  **Email OTP Length** to 6.
+- The free Supabase email service sends only a few emails per hour; set up
+  custom SMTP for real use.
 
 ## Database setup
 
@@ -60,15 +82,22 @@ one is safe to run again.
      directions.
    - Sharing posts (`posts.shared_post_id`).
    - Notifications for comments, replies, reactions and shares.
+8. `20261027010000_group_notification_settings.sql`: adds
+   `group_members.notify` (pages notify by default, groups don't),
+   the `group_post` notification type, and `set_group_notifications()` so
+   members can change only their own setting.
 
 ## Features
 
 | Feature | What you can do | Where |
 |---|---|---|
-| Accounts | Sign up, log in, edit your profile (photo, username, display name, bio) | Profile tab → Edit Profile |
-| Posts | Write text with a photo or short video, edit, delete | **+** button, `...` menu |
+| Accounts | Sign up, log in, edit your profile (photo, username, display name, bio) | Profile → ⚙ Settings → Edit profile |
+| Forgot password | Get a 6-digit code by email, enter it, set a new password. Works the same on web and phones (no links) | Login → forgot password? |
+| Settings | Edit profile, blocked users, dark mode, message notifications (desktop browsers), group and page notifications | Profile → ⚙ |
+| Dark mode | Light by default; the choice is remembered on web and phones | Settings → Dark mode |
+| Posts | Write text with a photo or a video of up to 2 minutes, edit, delete | **+** button, `...` menu |
 | Feed | Timeline sorted by time, pull to refresh | Home tab |
-| Reactions | 👍 ❤️ 😆 😮 😢 😡 (hold Like or tap 😀+), plus 👎 Dislike | Under each post |
+| Reactions | 👍 ❤️ 😆 😮 😢 😡 👎 (tap Like, or hold it to pick) | Under each post |
 | Comments | Add, edit, delete | Comment button |
 | Chat (1-1) | Send text, photos and videos; unsend; seen status; live updates | Message icon, or Message on a profile |
 | Message notifications | Pop-up banner in the app, a browser notification when the tab is in the background, and an unread badge. Mute anyone with the 🔔 button in their chat | Any screen, Messages icon |
@@ -78,13 +107,13 @@ one is safe to run again.
 | Reports | Report a post with a reason; it is hidden for you. Group owners and staff review reports on their group's posts (keep or remove) | `...` menu → Report post; group page → Reports |
 | Group management | Owner: set the group picture and banner, make members staff (or remove staff), kick anyone. Staff: kick members, review reports | Group page → Edit / Members |
 | Comment replies | Reply to a comment (threads stay one level deep, with an @mention); add a photo or video to a comment | Comments → Reply |
-| Notifications | New followers, follow requests (accept or decline here), new posts from people you follow, new posts from pages you follow; live badge and banner | Bell icon on Home |
+| Notifications | New followers, follow requests (accept or decline here), new posts from people you follow and from groups and pages you turned on; a red dot on the bell and a live banner | Bell icon on Home |
+| Group and page notifications | Turn new-post notifications on or off per group or page | Group page → 🔔, or Settings → Groups & pages |
 | Saved posts | Save or unsave from the `...` menu; a Saved tab on your profile. Edit Profile → "Show my saved posts" lets others see it | Profile → Saved |
-| Block users | Neither person sees the other's posts or comments, and they can't message or follow each other. The blocked person isn't told. Unblock any time | Profile → ⋮ → Block; your profile → 🚫 Blocked users |
+| Block users | Neither person sees the other's posts or comments, and they can't message or follow each other. The blocked person isn't told. Unblock any time | Profile → ⋮ → Block; Settings → Blocked users |
 | Share | Share a post to your timeline with an optional caption. Sharing a share shares the original. If the original is deleted, the share says it's unavailable | Share button |
 | More notifications | Someone commented on your post, replied to your comment, reacted (with the emoji), or shared your post | Bell icon |
 | Infinite scroll | Feeds load older posts as you scroll; refreshing keeps what you already loaded | All feeds |
-| Reaction picker | Hold (or right-click) Like to pop up 👍 ❤️ 😆 😮 😢 😡 above the button | Like button |
 
 Users can only change their own content. The app checks this, and Supabase
 row-level security enforces it. Group owners and admins can also remove posts
@@ -145,8 +174,9 @@ Code layout:
   snackbar explains why.
 - **Expired session:** treated as temporary and retried after the session
   refreshes.
-- **Uploads:** images over 5 MB and videos over 50 MB are rejected before
-  uploading, and wrong file types get a clear message. If saving the post
+- **Uploads:** images over 5 MB, videos over 50 MB and videos longer than
+  2 minutes are rejected before uploading (the length is checked in the app,
+  not by Supabase), and wrong file types get a clear message. If saving the post
   fails after the upload, the uploaded file is deleted.
 - **Online-only screens** (profile, groups, chat, search): load errors show the
   message with a Try again button. Action errors (follow, join, send, report)
@@ -155,6 +185,41 @@ Code layout:
   out.
 - Supabase error codes (`23505`, `23503`, `42501`, `PGRST2xx`, ...) are turned
   into readable messages.
+
+## Build and test
+
+```bash
+flutter pub get
+flutter test                      # unit and widget tests
+flutter run -d chrome             # web
+flutter build web
+```
+
+### Android
+
+Needs JDK 17 or newer (JDK 21 recommended) and the Android SDK.
+
+```bash
+flutter config --jdk-dir <path-to-jdk>
+flutter doctor --android-licenses
+flutter run -d <device-id>        # see `flutter devices`
+flutter build apk --release       # build/app/outputs/flutter-apk/app-release.apk
+```
+
+The release build is signed with the debug key, which is fine for sharing an
+APK but not for Google Play. The first Gradle build downloads several GB.
+
+### iOS
+
+Requires macOS and Xcode. Run `flutter build ipa`, then upload to App Store
+Connect (Xcode Organizer or Transporter) and add testers in TestFlight. This
+needs a paid Apple Developer account and a unique bundle ID in place of
+`com.example.appsocial`.
+
+### App icon
+
+`flutter test tool/generate_app_icons.dart` redraws the Android, iOS and web
+icons (white "s" on #059669).
 
 ## Known setup issue: spaces in paths
 

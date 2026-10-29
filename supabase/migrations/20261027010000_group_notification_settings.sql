@@ -1,12 +1,3 @@
--- Per-member notification setting for groups and pages.
--- Run after 20261008040000_...sql. Safe to re-run.
---
---   group_members  + notify boolean  null = default for the kind
---                                    (pages on, groups off)
---   notifications  types + group_post
---
--- Members change only their own setting through set_group_notifications(),
--- so the existing owner-only update policy (roles) stays as it is.
 
 alter table public.group_members
   add column if not exists notify boolean;
