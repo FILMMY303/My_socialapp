@@ -1,9 +1,7 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'core/storage/preferences.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/theme_controller.dart';
